@@ -29,34 +29,33 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y git zip unzip build-essential autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo6 cmake libffi-dev libssl-dev
+          sudo apt-get install -y \
+            git zip unzip build-essential autoconf \
+            libtool pkg-config zlib1g-dev \
+            libncurses5-dev libncursesw5-dev \
+            libtinfo6 cmake libffi-dev libssl-dev
+
+      - name: Accept Android SDK licenses
+        run: |
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses || true
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" \
+            "platform-tools" \
+            "platforms;android-35" \
+            "build-tools;35.0.0"
 
       - name: Install Buildozer
         run: |
           python -m pip install --upgrade pip setuptools wheel
           python -m pip install buildozer cython==0.29.36
 
-      - name: Accept Android SDK licenses
+      - name: Check project files
         run: |
-          mkdir -p "$ANDROID_HOME/licenses"
-          printf '%s\n' \
-            '8933bad161af4178b1185d1a37fbf41ea5269c55' \
-            '84831b9409646a918e30573bab4c9c91346d8ab' \
-            'd56f5187479451eabf01fb78af6dfcb131a6481e' \
-            > "$ANDROID_HOME/licenses/android-sdk-license"
-          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses || true
-
-      - name: Install Android SDK components
-        run: |
-          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" \
-            "platform-tools" \
-            "platforms;android-35" \
-            "build-tools;35.0.0"
+          ls -la
+          test -f main.py
+          test -f buildozer.spec
 
       - name: Build APK
         run: |
-          ls -la
-          test -f buildozer.spec
           buildozer -v android debug
 
       - name: Upload APK
@@ -66,4 +65,3 @@ jobs:
           name: snake-game-apk
           path: bin/*.apk
           if-no-files-found: warn
-          
